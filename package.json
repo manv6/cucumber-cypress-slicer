@@ -1,6 +1,6 @@
 {
   "name": "cucumber-cypress-slicer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "a cypress plugin for slice down all feature files per scenario",
   "main": "cucumber-slicer.js",
   "scripts": {
