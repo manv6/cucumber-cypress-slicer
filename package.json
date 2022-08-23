@@ -1,8 +1,15 @@
 {
   "name": "cucumber-cypress-slicer",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "a cypress plugin for slice down all feature files per scenario",
-  "main": "index.js",
+  "bin": {
+    "cucumber-cypress-slicer": "index.js"
+  },
+  "files": [
+    "index.js",
+    "feature-files.js",
+    "features.js"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
