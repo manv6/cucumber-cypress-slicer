@@ -67,8 +67,5 @@ async function main() {
     'cypress/e2e/parsed/'
   );
 }
-module.exports = {
-  cucumberSlicer,
-};
 
 main();
