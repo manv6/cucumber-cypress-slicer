@@ -2,7 +2,7 @@
 
 /* eslint-disable no-console */
 const fs = require('fs');
-const Gherkin = require('gherkin');
+const Gherkin = require('@cucumber/gherkin');
 const glob = require('glob');
 const path = require('path');
 
@@ -62,7 +62,6 @@ async function cucumberSlicer(featureFilesPath, splitDir) {
 
 async function main() {
   console.log('Parsing feature files to split them!!!');
-  
   cucumberSlicer(
     'cypress/e2e/**/*.feature',
     'cypress/e2e/parsed/'

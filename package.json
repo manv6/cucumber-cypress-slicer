@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/manv6/cucumber-cypress-slicer#readme",
   "dependencies": {
-    "gherkin": "^5.1.0",
+    "@cucumber/gherkin": "^24.1.0",
     "glob": "^7.1.2"
   }
 }
