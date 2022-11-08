@@ -42,10 +42,13 @@ function splitFeatureFile(parsed, dir) {
   ).map((child) => writeSingleScenarioFile(dir, parsed, [child]));
 }
 
-function cucumberSlicer(featureFiles, splitDir) {
+async function cucumberSlicer(featureFilesPath, splitDir) {
+  const filesBefore = glob
+    .sync(featureFilesPath)
+    .map((file) => `${file}`);
   const parser = new Gherkin.Parser();
   let generatedFiles = [];
-  featureFiles.forEach((file) => {
+  filesBefore.forEach((file) => {
     console.log(path.dirname(file).replace('cypress/e2e/', ''));
     generatedFiles = generatedFiles.concat(
       splitFeatureFile(
@@ -59,13 +62,13 @@ function cucumberSlicer(featureFiles, splitDir) {
 
 async function main() {
   console.log('Parsing feature files to split them!!!');
-  const filesBefore = glob
-    .sync('cypress/e2e/**/*.feature')
-    .map((file) => `${file}`);
+  
   cucumberSlicer(
-    filesBefore,
+    'cypress/e2e/**/*.feature',
     'cypress/e2e/parsed/'
   );
 }
 
 main();
+
+module.exports = { cucumberSlicer }
