@@ -63,7 +63,7 @@ async function cucumberSlicer(featureFilesPath, splitDir) {
 async function main() {
   console.log("Parsing feature files to split them!!!");
   if (process.argv[2] === "main")
-    cucumberSlicer("e2e/**/*.feature", "e2e/parsed/");
+    cucumberSlicer("cypress/e2e/**/*.feature", "cypress/e2e/parsed/");
 }
 
 main();
