@@ -1,6 +1,6 @@
 {
   "name": "cucumber-cypress-slicer",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "a cypress plugin for slice down all feature files per scenario",
   "bin": {
     "cucumber-cypress-slicer": "index.js"
@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/manv6/cucumber-cypress-slicer#readme",
   "dependencies": {
-    "@cucumber/gherkin": "^24.1.0",
+    "gherkin": "^5.1.0",
     "glob": "^7.1.2"
   }
 }
