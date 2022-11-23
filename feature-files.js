@@ -25,13 +25,8 @@ function writeFeatureFile(dir, parsed, content) {
   const filename = `${dir}/${featureName.replace('Feature: ', '')
   .replace(/\s/g, '_')}-${scenarioName.replace('Scenario: ', '')
   .replace('Scenario Outline: ', '')
-  .replace('.', '')
-  .replace(',', '')
-  .replace('/', '_')
-  .replace(/'/g, '')
-  .replace(/\s/g, '_')
-  .replace('(','')
-  .replace(')','')}.feature`;
+  .replace(/[^a-zA-Z ]/g, '')
+  .replace(/\s/g, '_')}.feature`;
   fs.writeFileSync(filename, content);
   return filename;
 }
