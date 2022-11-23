@@ -22,7 +22,16 @@ function writeFeatureFile(dir, parsed, content) {
   
   //remove feature and scenario from new filename
   // eslint-disable-next-line max-len
-  const filename = `${dir}/${featureName.replace('Feature: ', '').replace(/\s/g, '_')}-${scenarioName.replace('Scenario: ', '').replace('Scenario Outline: ', '').replace('.', '').replace('/', '_').replace(/'/g, '').replace(/\s/g, '_')}.feature`;
+  const filename = `${dir}/${featureName.replace('Feature: ', '')
+  .replace(/\s/g, '_')}-${scenarioName.replace('Scenario: ', '')
+  .replace('Scenario Outline: ', '')
+  .replace('.', '')
+  .replace(',', '')
+  .replace('/', '_')
+  .replace(/'/g, '')
+  .replace(/\s/g, '_')
+  .replace('(','')
+  .replace(')','')}.feature`;
   fs.writeFileSync(filename, content);
   return filename;
 }
