@@ -1,14 +1,12 @@
 {
   "name": "cucumber-cypress-slicer",
-  "version": "3.0.0",
+  "version": "3.5.0",
   "description": "a cypress plugin for slice down all feature files per scenario",
   "bin": {
     "cucumber-cypress-slicer": "index.js"
   },
   "files": [
-    "index.js",
-    "feature-files.js",
-    "features.js"
+    "index.js"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -20,7 +18,7 @@
   "keywords": [
     "cucumber",
     "cypress",
-    "parallel"
+    "cucumber splitter"
   ],
   "author": "manv6",
   "license": "ISC",
@@ -29,7 +27,7 @@
   },
   "homepage": "https://github.com/manv6/cucumber-cypress-slicer#readme",
   "dependencies": {
-    "gherkin": "^5.1.0",
+    "@cucumber/gherkin": "^26.2.0",
     "glob": "^7.1.2"
   }
 }
