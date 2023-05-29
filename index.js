@@ -21,6 +21,7 @@ class GherkinDocumentHandler {
   }
 
   writeToFile(directory) {
+    
     if (!fs.existsSync(directory))
       fs.mkdirSync(directory, { recursive: true })
     
@@ -198,7 +199,7 @@ async function cucumberSlicer(featureFilesPath, splitDir) {
     );
     // console.log(`working on directory: ${path.dirname(file).replace('cypress/e2e/', '')}`);
     generatedFiles += new GherkinDocumentHandler(gherkinDocument).writeToFile(
-      splitDir+path.dirname(file).replace('cypress/e2e/', '')
+      splitDir+path.dirname(file).replace('cypress/e2e/', '').replace('cypress/e2e', '')
     );
   });
   console.log(`${filesBefore.length} files parsed`)
