@@ -1,114 +1,208 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
 const glob = require('glob');
 const path = require('path');
+const fs = require("fs");
+const Gherkin = require("@cucumber/gherkin");
+const Messages = require("@cucumber/messages");
 
-function splitScenarios(featureFileContent, savePath) {
-  if (!fs.existsSync(savePath))
-    fs.mkdirSync(savePath, { recursive: true });
-  
-  const featureRegex = /((@.+\n)+)?Feature:\s(.+)\n/;
-  const featureMatch = featureRegex.exec(featureFileContent);
-  const featureTags = featureMatch[1] ? featureMatch[1].trim() : '';
-  const featureTitle = featureMatch[3].replace(/ /g, '_'); // Replace spaces with underscores for file name
+const uuidFn = Messages.IdGenerator.uuid();
+const builder = new Gherkin.AstBuilder(uuidFn);
+const matcher = new Gherkin.GherkinClassicTokenMatcher(); // or Gherkin.GherkinInMarkdownTokenMatcher()
 
-  const scenarioRegex = /((@.+\n)+)?Scenario( Outline)?:\s(.+)((.|\n)+?)(?=((@.+\n)+)?Scenario( Outline)?:\s|$)/g;
+const parser = new Gherkin.Parser(builder, matcher);
 
-  let scenarioMatch;
-  let counter = 0;
 
-  while ((scenarioMatch = scenarioRegex.exec(featureFileContent)) !== null) {
-    let tags = '';
-    let tagMatch;
-    let tagRegex = /@.+/g;
-    while ((tagMatch = tagRegex.exec(scenarioMatch[0])) !== null) {
-      tags += tagMatch[0] + '\n';
+class GherkinDocumentHandler {
+  constructor(gherkinDocument) {
+    this.gherkinDocument = gherkinDocument;
+    this.feature = gherkinDocument.feature;
+    this.generatedFiles = 0;
+  }
+
+  writeToFile(directory) {
+    if (!fs.existsSync(directory))
+      fs.mkdirSync(directory, { recursive: true })
+    
+    const feature = this.gherkinDocument.feature;
+    // console.log("gherkin doc");
+    let featureText = "";
+    if (feature.tags.length > 0) {
+      let tags = feature.tags.map((tag) => tag.name).join("\n");
+      featureText += `${tags}\n`;
     }
-    tags = tags.trim();
+    featureText += `Feature: ${feature.name}\n${feature.description}\n\n`;
 
-    let scenarioType = scenarioMatch[3] ? scenarioMatch[3].trim() : '';
-    let scenarioName = scenarioMatch[4].trim();
-    let scenarioContent = scenarioMatch[5];
-
-    // Merge feature and scenario tags
-    tags = [featureTags, tags].filter(Boolean).join('\n');
-
-    if (scenarioType.toLowerCase() === 'outline') {
-      const examplesRegex = /Examples:\s*\n\s*\|(.+)\|\s*\n((?:\s*\|.+(?:\n|$))+(?:\s*#.+)+((\s*\|.+|\n)+)?)/g;
-      let examplesMatch = examplesRegex.exec(scenarioContent);
-
-      if (examplesMatch) {
-        let headers = examplesMatch[1]
-        .trim()
-        .split("|")
-        .map((header) => header.trim());
-
-      let valuesBlock = examplesMatch[2].trim();
-      let valuesRows = valuesBlock.split("\n");
-      let values = [];
-      for (let row of valuesRows) {
-        let trimmedRow = row.trim();
-        // Ignore rows that start with a comment symbol #
-        if (trimmedRow && !trimmedRow.startsWith("#")) {
-          let rowValues = trimmedRow
-            .split("|")
-            .filter((item) => item !== ""); // Exclude empty values
-          
-          values.push(rowValues);
-        }
+    let featureBackground = "";
+    feature.children.forEach((child, index) => {
+      let featureBody = "";
+      if (child.background) {
+        // console.log("background");
+        featureBackground = this.handleBackground(child.background);
       }
-      console.log(values)
-      values.forEach((value) => {
-        if (value) {
-          
-          let valuesArr = value//.split("|").filter(element => element);
-          let replacedScenarioContent = scenarioContent;
-          headers.forEach((header, index) => {
-              console.log(header)
-              console.log(valuesArr[index])
-            let regex = new RegExp("<" + header + ">", "g");
-            replacedScenarioContent = replacedScenarioContent.replace(
-              regex,
-              valuesArr[index].trim()
-            );
-          });
-            let newScenarioName = `${scenarioName} ${valuesArr}`.replace(/\s+/g, ' ').trim();
-            let newScenarioContent = replacedScenarioContent.replace(
-              /Scenario Outline:/,
-              'Scenario:'
-            ).replace(examplesRegex, '');
-
+      if (child.scenario && child.scenario.keyword === "Scenario") {
+        // console.log("scenario");
+        featureBody = this.handleScenario(child.scenario);
+        fs.writeFileSync(
+          `${directory}/${feature.name.replace(
+            /\s/g,
+            "_"
+          )}_${child.scenario.name
+            .replace(/[^a-zA-Z ]/g, "")
+            .replace(/\s/g, "_")}.feature`,
+          featureText + featureBackground + featureBody
+        );
+        this.generatedFiles++;
+      } else if (child.rule) {
+        // console.log("rule");
+        child.rule.children.forEach((ruleChild, ruleIndex) => {
+          if (ruleChild.scenario && ruleChild.scenario.keyword === "Scenario") {
+            // console.log("Rule scenario");
+            featureBody = this.handleScenario(ruleChild.scenario);
             fs.writeFileSync(
-              path.join(__dirname, savePath,  `${featureTitle.replace(/\s/g, '_')}_${newScenarioName.replace(/[^a-zA-Z ]/g, '')
-              .replace(/\s/g, '_')}.feature`),
-              `${tags}\nFeature: Test Feature\n\nScenario: ${newScenarioName}${newScenarioContent}`
+              `${directory}/${feature.name.replace(
+                /\s/g,
+                "_"
+              )}_${ruleChild.scenario.name
+                .replace(/[^a-zA-Z ]/g, "")
+                .replace(/\s/g, "_")}.feature.feature`,
+              featureText + featureBackground + featureBody
+            );
+            this.generatedFiles++;
+          } else if (
+            ruleChild.scenario &&
+            ruleChild.scenario.keyword === "Scenario Outline"
+          ) {
+            // console.log("Rule scenario outline");
+            featureBody = this.handleScenarioOutline(
+              ruleChild.scenario,
+              directory,
+              featureText,
+              featureBackground
             );
           }
         });
+      } else if (
+        child.scenario &&
+        child.scenario.keyword === "Scenario Outline"
+      ) {
+        // console.log("scenario Outline");
+        this.handleScenarioOutline(
+          child.scenario,
+          directory,
+          featureText,
+          featureBackground
+        );
       }
-    } else {
-      fs.writeFileSync(
-        path.join(__dirname, savePath, `${featureTitle.replace(/\s/g, '_')}_${scenarioName.replace(/[^a-zA-Z ]/g, '')
-        .replace(/\s/g, '_')}.feature`),
-        `${tags}\nFeature: Test Feature\n\nScenario: ${scenarioName}${scenarioContent}`
-      );
+    });
+    return this.generatedFiles;
+  }
+
+  handleScenario(scenario) {
+    let scenarioText = "";
+    if (scenario.tags.length > 0) {
+      let tags = scenario.tags.map((tag) => tag.name).join("\n");
+      scenarioText += `${tags}\n`;
     }
+    scenarioText += `Scenario: ${scenario.name}\n`;
+    scenario.steps.forEach((step) => {
+      scenarioText += `    ${step.keyword} ${step.text}\n`;
+    });
+    return scenarioText;
+  }
+
+  handleScenarioOutline(scenario, directory, featureText, featureBackground) {
+    let scenarioTags = "";
+    if (scenario.tags.length > 0) {
+      let tags = scenario.tags.map((tag) => tag.name).join(" ");
+      scenarioTags += `${tags}\n`;
+    }
+
+    if (scenario.examples.length > 0) {
+      scenario.examples.forEach((example, index) => {
+        this.handleExample(
+          scenario,
+          directory,
+          featureText,
+          featureBackground,
+          scenarioTags,
+          example,
+          index
+        );
+      });
+    }
+  }
+
+  handleExample(
+    scenario,
+    directory,
+    featureText,
+    featureBackground,
+    scenarioTags,
+    example,
+    index
+  ) {
+    let exampleText = "";
+    let nameText = "";
+    const header = example.tableHeader.cells.map((cell) => cell.value);
+    example.tableBody.forEach((row) => {
+      exampleText = `Scenario: ${scenario.name} Example ${index + 1}\n`;
+      const values = row.cells.map((cell) => cell.value);
+      const params = header.reduce((obj, key, i) => {
+        obj[key] = values[i];
+        return obj;
+      }, {});
+      scenario.steps.forEach((step) => {
+        let stepText = step.text;
+
+        for (const key in params) {
+          stepText = stepText.replace(`<${key}>`, params[key]);
+          nameText += "_" + params[key];
+        }
+        exampleText += `    ${step.keyword} ${stepText}\n`;
+      });
+      fs.writeFileSync(
+        `${directory}/${this.feature.name.replace(/\s/g, "_")}_${scenario.name
+          .replace(/[^a-zA-Z ]/g, "")
+          .replace(/\s/g, "_")}_${index + 1}.feature`,
+        featureText + featureBackground + scenarioTags + exampleText
+      );
+      this.generatedFiles++;
+      index++;
+    });
+    exampleText = "";
+    nameText = "";
+  }
+
+  handleBackground(background) {
+    let scenarioText = "";
+    scenarioText += `${background.keyword}: ${background.name}\n`;
+    if (background.description) scenarioText += `${background.description}\n`;
+    background.steps.forEach((step) => {
+      scenarioText += `    ${step.keyword} ${step.text}\n`;
+    });
+    scenarioText += `\n`;
+    return scenarioText;
   }
 }
 
 async function cucumberSlicer(featureFilesPath, splitDir) {
+  let generatedFiles = 0;
   const filesBefore = glob
     .sync(featureFilesPath)
     .map((file) => `${file}`);
-  // const parser = new Gherkin.Parser();
-  let generatedFiles = [];
+  
   filesBefore.forEach((file) => {
-    console.log(`working on directory: ${path.dirname(file).replace('cypress/e2e/', '')}`);
-      splitScenarios(
-        fs.readFileSync(file, 'utf8'),
-        `${splitDir}/${path.dirname(file).replace('cypress/e2e/', '')}`)
+    const gherkinDocument = parser.parse(
+      fs.readFileSync(file, "utf-8")
+    );
+    // console.log(`working on directory: ${path.dirname(file).replace('cypress/e2e/', '')}`);
+    generatedFiles += new GherkinDocumentHandler(gherkinDocument).writeToFile(
+      splitDir+path.dirname(file).replace('cypress/e2e/', '')
+    );
   });
+  console.log(`${filesBefore.length} files parsed`)
+  console.log(`${generatedFiles} files generated`)
   return generatedFiles;
 }
 
