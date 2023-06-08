@@ -66,7 +66,7 @@ class GherkinDocumentHandler {
                 "_"
               )}_${ruleChild.scenario.name
                 .replace(/[^a-zA-Z ]/g, "")
-                .replace(/\s/g, "_")}.feature.feature`,
+                .replace(/\s/g, "_")}.feature`,
               featureText + featureBackground + featureBody
             );
             this.generatedFiles++;
