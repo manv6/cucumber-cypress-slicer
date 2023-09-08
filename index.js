@@ -163,7 +163,7 @@ class GherkinDocumentHandler {
         exampleText += `    ${step.keyword} ${stepText}\n`;
       });
       fs.writeFileSync(
-        `${directory}/${this.feature.name.replace(/\s/g, "_")}_${scenario.name
+        `${directory}/${this.feature.name.replace(/\s/g, "_").replace('/', '').replace('\\', '')}_${scenario.name
           .replace(/[^a-zA-Z ]/g, "")
           .replace(/\s/g, "_")}_${index + 1}.feature`,
         featureText + featureBackground + scenarioTags + exampleText
