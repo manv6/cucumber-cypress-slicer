@@ -48,7 +48,7 @@ class GherkinDocumentHandler {
           `${directory}/${feature.name.replace(
             /\s/g,
             "_"
-          )}_${child.scenario.name
+          ).replace('/', '')}_${child.scenario.name
             .replace(/[^a-zA-Z ]/g, "")
             .replace(/\s/g, "_")}.feature`,
           featureText + featureBackground + featureBody
@@ -64,7 +64,7 @@ class GherkinDocumentHandler {
               `${directory}/${feature.name.replace(
                 /\s/g,
                 "_"
-              )}_${ruleChild.scenario.name
+              ).replace('/', '')}_${ruleChild.scenario.name
                 .replace(/[^a-zA-Z ]/g, "")
                 .replace(/\s/g, "_")}.feature`,
               featureText + featureBackground + featureBody
